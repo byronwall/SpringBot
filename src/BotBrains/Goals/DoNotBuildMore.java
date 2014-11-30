@@ -1,6 +1,7 @@
 package BotBrains.Goals;
 
 import BotBrains.*;
+import BotBrains.Actions.BuildAction;
 import com.springrts.ai.oo.clb.OOAICallback;
 import com.springrts.ai.oo.clb.Resource;
 import com.springrts.ai.oo.clb.UnitDef;
@@ -40,7 +41,8 @@ public class DoNotBuildMore extends Goal {
 
         OOAICallback clb = DecisionMaker.get().getClb();
 
-        if (action.type == Action.ActionType.BUILD) {
+        //TODO verify this is best way to do this
+        if (action instanceof BuildAction) {
             //need to check each resource and combine "build-cost ratios" ==> cost/storage
             UnitDef unitDef = action.def_buildeeUnit;
 

@@ -1,6 +1,7 @@
 package BotBrains.Goals;
 
 import BotBrains.Action;
+import BotBrains.Actions.BuildAction;
 import BotBrains.DecisionMaker;
 import BotBrains.Goal;
 import com.springrts.ai.oo.clb.Unit;
@@ -30,7 +31,7 @@ public class ForceSingleUnit extends Goal {
     @Override
     public float getGoalChange(Action action) {
 
-        if (action.type == Action.ActionType.BUILD) {
+        if (action instanceof BuildAction) {
 
             if (action.def_buildeeUnit.getName().equals(unit_name)) {
 

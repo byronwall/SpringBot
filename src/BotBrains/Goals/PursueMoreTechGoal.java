@@ -1,6 +1,7 @@
 package BotBrains.Goals;
 
 import BotBrains.*;
+import BotBrains.Actions.BuildAction;
 import BotBrains.Graph.Graph;
 import BotBrains.Graph.Node;
 import com.springrts.ai.oo.clb.OOAICallback;
@@ -115,7 +116,7 @@ public class PursueMoreTechGoal extends Goal {
             initDistances();
         }
 
-        if (action.type == Action.ActionType.BUILD) {
+        if (action instanceof BuildAction) {
             //going to build... how good is this unit
 
             //this will be a 0 or 1 choice... is it a factory?

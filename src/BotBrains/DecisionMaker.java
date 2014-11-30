@@ -1,11 +1,14 @@
 package BotBrains;
 
+import BotBrains.Actions.AttackAction;
+import BotBrains.Actions.BuildAction;
+import BotBrains.Actions.ExploreAction;
+import BotBrains.Actions.NothingAction;
 import BotBrains.Goals.*;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
 import com.springrts.ai.oo.AIFloat3;
 import com.springrts.ai.oo.clb.OOAICallback;
-import com.springrts.ai.oo.clb.Resource;
 import com.springrts.ai.oo.clb.Unit;
 import com.springrts.ai.oo.clb.UnitDef;
 
@@ -123,13 +126,25 @@ public class DecisionMaker {
 
         //add in all the things to do here
         //SpringBot.write("creating build actions for :" + unit.getDef().getName());
-        CreateBuildActions(unit, actions);
+        List<Action> buildActions = BuildAction.createAllActions(unit);
+        if (buildActions != null) {
+            actions.addAll(buildActions);
+        }
         //SpringBot.write("creating attack actions for :" + unit.getDef().getName());
-        CreateFightAction(unit, actions);
+        AttackAction attackAction = AttackAction.createAction(unit);
+        if (attackAction != null) {
+            actions.add(attackAction);
+        }
+
+        ExploreAction exploreAction = ExploreAction.createAction(unit);
+        if (exploreAction != null) {
+            actions.add(exploreAction);
+        }
+
 
         //create the do nothing action
         if (actions.size() > 0) {
-            actions.add(new Action(Action.ActionType.DO_NOTHING, unit));
+            actions.add(new NothingAction());
         }
 
         SpringBot.write("process unit actions: " + unit.getDef().getName() + ", count: " + actions.size());
@@ -139,84 +154,6 @@ public class DecisionMaker {
             DecideAndExecute(actions);
         }
 
-    }
-
-    public void CreateBuildActions(Unit unit, List<Action> actions) {
-        //this needs to create the set of build actions
-
-        for (UnitDef build_options : unit.getDef().getBuildOptions()) {
-            Action action_new = new Action();
-            action_new.type = Action.ActionType.BUILD;
-            action_new.def_buildeeUnit = build_options;
-            action_new.def_builderUnit = unit;
-
-            actions.add(action_new);
-        }
-    }
-
-    public void CreateExploreAction(Unit unit, List<Action> actions) {
-
-        //check for weapons, return if none
-        if (unit.getDef().getSpeed() == 0) {
-            return;
-        }
-
-        Action action_explore = new Action();
-
-        action_explore.type = Action.ActionType.EXPLORE;
-        action_explore.def_builderUnit = unit;
-
-
-        //allow faster units to travel farther
-        float EXPLORER_DIST = unit.getDef().getSpeed() * 20;
-
-        float z_delta = Util.RAND.nextFloat() * EXPLORER_DIST - EXPLORER_DIST / 2;
-        float x_delta = Util.RAND.nextFloat() * EXPLORER_DIST - EXPLORER_DIST / 2;
-
-        AIFloat3 pos = unit.getPos();
-        pos.x += x_delta;
-        pos.z += z_delta;
-
-        //clamp the values
-        pos.x = Util.clamp(pos.x, 0, clb.getMap().getWidth() * 8);
-        pos.z = Util.clamp(pos.z, 0, clb.getMap().getHeight() * 8);
-
-
-        AIFloat3 pos_map = VisitedMap.getLowestValue();
-
-        //choose between the closer location
-        if(Util.calcDist(unit.getPos(), pos) < Util.calcDist(unit.getPos(), pos_map)){
-            action_explore.loc_action = pos;
-        }
-        else{
-            action_explore.loc_action = pos_map;
-        }
-
-        SpringBot.write("EXPLORE action added:" + action_explore);
-
-        actions.add(action_explore);
-    }
-
-    public void CreateFightAction(Unit unit, List<Action> actions) {
-
-        //check for weapons, return if none
-        if (unit.getDef().getWeaponMounts().size() == 0 ||
-                !unit.getDef().isAbleToMove() ||
-                unit.getDef().isCommander() ||
-                unit.getDef().getName().equals("armcom") ||
-                unit.getDef().getName().equals("corcom")) {
-            return;
-        }
-
-        Action fight = new Action();
-
-        fight.type = Action.ActionType.ATTACK;
-        fight.def_builderUnit = unit;
-        fight.loc_action = ThreatMap.getHighestValue();
-
-        SpringBot.write("attack action added:" + fight);
-
-        actions.add(fight);
     }
 
     public void resetGoals() {
@@ -261,86 +198,22 @@ public class DecisionMaker {
             SpringBot.write("best action: " + best_action.toString());
 
             //need to pick build location and check if it can be done
-            if (best_action.type == Action.ActionType.BUILD) {
-                for (Resource res : getClb().getResources()) {
-                    if (best_action.def_buildeeUnit.getExtractsResource(res) > 0) {
-                        //this appears to only work for extractable resources
-                        float min_dist = Float.MAX_VALUE;
-                        for (AIFloat3 resource_spot : clb.getMap().getResourceMapSpotsPositions(res)) {
 
-                            //check distance and then verify that we can build there
-                            float dist = Util.calcDist(best_action.def_builderUnit.getPos(), resource_spot);
-                            if (dist < min_dist) {
-                                //check if can build
-                                if (clb.getMap().isPossibleToBuildAt(best_action.def_buildeeUnit, resource_spot, 0)) {
-                                    min_dist = dist;
-                                    buildSite = resource_spot;
-
-                                    //SpringBot.write("resource build: " + buildSite);
-                                }
-                            }
-                        }
-                    }
-                    //else here would handle any other location specific concenrs
-                }
-            }
+            buildSite = best_action.findLocationForAction();
 
 
-            if (best_action.type == Action.ActionType.BUILD) {
-                //will be null if there is no resource specific stuff going on
-                if (buildSite == null || buildSite == Util.EMPTY_POS) {
-                    //at this point, we still do not have a buildsite.  just need to pick somethign nearby
-                    AIFloat3 possibleSite = clb.getMap().findClosestBuildSite(best_action.def_buildeeUnit, best_action.def_builderUnit.getPos(), 5000, 5, 0);
-
-                    SpringBot.write("possibleSite: " + possibleSite);
-
-                    if (!Util.PosIsNull(possibleSite)) {
-                        buildSite = possibleSite;
-                    }
-
-                }
-
-                if (buildSite != null) {
-                    SpringBot.write("buildSite: " + buildSite.toString());
-                    break;
-                } else {
-                    //if not doable, need to delete it and check again
-                    best_action.consider_me = false;
-                }
-            } else if (best_action.type == Action.ActionType.ATTACK ||
-                    best_action.type == Action.ActionType.DO_NOTHING ||
-                    best_action.type == Action.ActionType.EXPLORE) {
-                //these all do not require further deliberation... at least not yet
+            //TODO verify that this code will work as expected
+            if (buildSite != null) {
                 break;
+            } else {
+                actions.remove(best_action);
             }
-
         }
 
         if (best_action != null) {
             //should now have something to do
             //action.execute()
-
-            switch (best_action.type) {
-                case BUILD:
-                    best_action.def_builderUnit.build(best_action.def_buildeeUnit, buildSite, 0, (short) 0, 0);
-                    break;
-                case EXPLORE:
-                    best_action.def_builderUnit.setMoveState(Util.MOVE_STATE_ROAM, (short) 0, 0);
-                    best_action.def_builderUnit.moveTo(best_action.loc_action, (short) 0, 0);
-                    break;
-                case ATTACK:
-                    SpringBot.write("going to attack :" + best_action + ", loc: " + best_action.loc_action);
-
-                    //set to roam.... hopefully he attacks now.
-                    best_action.def_builderUnit.setMoveState(Util.MOVE_STATE_ROAM, (short) 0, 0);
-                    best_action.def_builderUnit.fight(best_action.loc_action, (short) 0, 0);
-
-                    break;
-                case DO_NOTHING:
-                    break;
-            }
-
-
+            best_action.processAction();
         }
         //made an action, clear out choices for next time
 

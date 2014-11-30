@@ -1,6 +1,7 @@
 package BotBrains.Goals;
 
 import BotBrains.Action;
+import BotBrains.Actions.BuildAction;
 import BotBrains.DecisionMaker;
 import BotBrains.Goal;
 import BotBrains.SpringBot;
@@ -39,7 +40,7 @@ public class MakeSolarGoal extends Goal {
         OOAICallback clb = DecisionMaker.get().getClb();
         res = clb.getResourceByName("Energy");
 
-        if (action.type == Action.ActionType.BUILD) {
+        if (action instanceof BuildAction) {
             //going to build, check out how much metal this will create
 
             //cost to build it

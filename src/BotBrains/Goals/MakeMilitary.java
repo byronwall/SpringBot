@@ -1,6 +1,7 @@
 package BotBrains.Goals;
 
 import BotBrains.Action;
+import BotBrains.Actions.BuildAction;
 import BotBrains.DecisionMaker;
 import BotBrains.Goal;
 import BotBrains.SpringBot;
@@ -43,7 +44,7 @@ public class MakeMilitary extends Goal {
     @Override
     public float getGoalChange(Action action) {
 
-        if (action.type == Action.ActionType.BUILD) {
+        if (action instanceof BuildAction) {
             //going to build... how good is this unit
             //this just picks the one with the biggest guns
             //TODO: somehow factor in unit speed, range, cost, etc.

@@ -1,6 +1,7 @@
 package BotBrains.Goals;
 
 import BotBrains.*;
+import BotBrains.Actions.BuildAction;
 import com.springrts.ai.oo.clb.Unit;
 import com.springrts.ai.oo.clb.UnitDef;
 
@@ -42,7 +43,7 @@ public class BuildFactories extends Goal {
     @Override
     public float getGoalChange(Action action) {
 
-        if (action.type == Action.ActionType.BUILD) {
+        if (action instanceof BuildAction) {
             //going to build... how good is this unit
 
             //this will be a 0 or 1 choice... is it a factory?
