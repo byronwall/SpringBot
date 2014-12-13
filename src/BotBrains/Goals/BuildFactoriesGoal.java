@@ -5,9 +5,9 @@ import BotBrains.Actions.BuildAction;
 import com.springrts.ai.oo.clb.Unit;
 import com.springrts.ai.oo.clb.UnitDef;
 
-public class BuildFactories extends Goal {
+public class BuildFactoriesGoal extends Goal {
 
-    float target_ratio = 0.1f;
+    float target_ratio = 0.03f;
 
     @Override
     protected float recalculateValue() {

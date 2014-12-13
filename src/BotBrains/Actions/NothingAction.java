@@ -20,4 +20,9 @@ public class NothingAction extends Action {
         //TODO fix this garbage
         return new AIFloat3(0, 0, 0);
     }
+
+    @Override
+    public String toString() {
+        return "NOTHING action for unit";
+    }
 }

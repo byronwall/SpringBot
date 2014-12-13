@@ -11,5 +11,6 @@
     <orderEntry type="library" name="vecmath" level="project" />
     <orderEntry type="library" name="JavaOO-AIWrapper" level="project" />
     <orderEntry type="library" name="guava-18.0" level="project" />
+    <orderEntry type="library" name="sqlite-jdbc-3.8.7" level="project" />
   </component>
 </module>

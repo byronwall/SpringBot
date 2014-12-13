@@ -1,10 +1,7 @@
 package BotBrains.Goals;
 
-import BotBrains.Action;
+import BotBrains.*;
 import BotBrains.Actions.BuildAction;
-import BotBrains.DecisionMaker;
-import BotBrains.Goal;
-import BotBrains.SpringBot;
 import com.springrts.ai.oo.clb.OOAICallback;
 import com.springrts.ai.oo.clb.Resource;
 import com.springrts.ai.oo.clb.UnitDef;
@@ -49,7 +46,7 @@ public class MakeSolarGoal extends Goal {
             if (unitDef.getSpeed() == 0) {
 
                 //cost/gain to run it
-                float make = unitDef.getExtractsResource(res) + unitDef.getResourceMake(res) + unitDef.getMakesResource(res) - unitDef.getUpkeep(res);
+                float make = unitDef.getExtractsResource(res) + unitDef.getResourceMake(res) + unitDef.getMakesResource(res) - unitDef.getUpkeep(res) - Util.getSolarSuck(unitDef);
 
                 return make;
             }

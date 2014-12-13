@@ -1,15 +1,11 @@
 package BotBrains.Goals;
 
-import BotBrains.Action;
+import BotBrains.*;
 import BotBrains.Actions.BuildAction;
-import BotBrains.DecisionMaker;
-import BotBrains.Goal;
-import BotBrains.SpringBot;
 import com.springrts.ai.oo.clb.Unit;
 import com.springrts.ai.oo.clb.UnitDef;
-import com.springrts.ai.oo.clb.WeaponMount;
 
-public class MakeMilitary extends Goal {
+public class MakeMilitaryUnitsGoal extends Goal {
 
     @Override
     protected float recalculateValue() {
@@ -49,7 +45,7 @@ public class MakeMilitary extends Goal {
             //this just picks the one with the biggest guns
             //TODO: somehow factor in unit speed, range, cost, etc.
 
-            return getDamage(action.def_buildeeUnit);
+            return Util.getTotalDamage(action.def_buildeeUnit);
 
         } else {
             //no build = no care
@@ -58,31 +54,4 @@ public class MakeMilitary extends Goal {
 
     }
 
-    //TODO: cache this result for all  units... will not change
-    private float getDamageSiblings(UnitDef def) {
-        //idea is that the ability to build units is important.
-        //add in child units with average damage times sqrt(number of units).
-        //this allows mild growth in rating with more possible units
-
-        float damage = getDamage(def);
-
-        for (UnitDef def_child : def.getBuildOptions()) {
-            damage += getDamage(def_child) / def.getBuildOptions().size() * 0.1f;
-        }
-
-        return damage;
-    }
-
-    private float getDamage(UnitDef def) {
-
-        float damage = 0;
-
-        for (WeaponMount weaponMount : def.getWeaponMounts()) {
-            if (weaponMount.getWeaponDef().isAbleToAttackGround() && !weaponMount.getWeaponDef().isFireSubmersed()) {
-                damage += weaponMount.getWeaponDef().getDamage().getTypes().get(0) * weaponMount.getWeaponDef().getAreaOfEffect() * weaponMount.getWeaponDef().getSalvoSize();
-            }
-        }
-
-        return damage;
-    }
 }

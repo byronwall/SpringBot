@@ -28,6 +28,12 @@ public class StoreSolarGoal extends Goal {
 
         float value = Math.min(Math.max(average / storage, 0), 1);
 
+        //TODO formalize this somehow
+        //dont build storage when it is way beyond needs
+        if (storage > 100 * clb.getEconomy().getIncome(res) && storage > 20000) {
+            return 0;
+        }
+
         SpringBot.write("store solar goal is: " + value);
 
         return value;

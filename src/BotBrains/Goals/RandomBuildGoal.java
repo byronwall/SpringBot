@@ -3,7 +3,6 @@ package BotBrains.Goals;
 import BotBrains.Action;
 import BotBrains.Goal;
 import BotBrains.Util;
-import com.springrts.ai.oo.clb.Resource;
 
 public class RandomBuildGoal extends Goal {
 
@@ -11,7 +10,8 @@ public class RandomBuildGoal extends Goal {
     protected float recalculateValue() {
         //this needs to determine how important this goal is
 
-        return 0.5f;
+        //TODO make this a parmater for the model
+        return 1.0f;
 
     }
 

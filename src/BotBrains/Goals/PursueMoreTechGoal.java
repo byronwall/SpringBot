@@ -12,7 +12,7 @@ import java.util.HashMap;
 
 public class PursueMoreTechGoal extends Goal {
 
-    int target_tech = 2;
+    int target_tech = 4;
 
     Graph tech_graph = new Graph();
     HashMap<String, Integer> distances = null;
@@ -131,12 +131,16 @@ public class PursueMoreTechGoal extends Goal {
             int child_dist = 1;
             //give credit for build queue, likely need to tweak this
             for (UnitDef unitDef : def.getBuildOptions()) {
-                Integer child_unit = distances.get(unitDef.getName());
+
                 //SpringBot.write("checking children now: " + unitDef.getName() + ", val: " + child_unit);
-                child_dist += child_unit;
+                //try a simple approach to simply give credit for having better children
+                if (child_dist > distance) {
+                    distance++;
+                    break;
+                }
             }
 
-            distance += Math.log10(child_dist);
+            //distance += Math.log10(child_dist);
 
             //SpringBot.write("final distance value: " + distance);
             return distance;

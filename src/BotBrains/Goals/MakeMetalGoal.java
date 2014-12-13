@@ -1,10 +1,7 @@
 package BotBrains.Goals;
 
-import BotBrains.Action;
+import BotBrains.*;
 import BotBrains.Actions.BuildAction;
-import BotBrains.DecisionMaker;
-import BotBrains.Goal;
-import BotBrains.SpringBot;
 import com.springrts.ai.oo.clb.Map;
 import com.springrts.ai.oo.clb.OOAICallback;
 import com.springrts.ai.oo.clb.Resource;
@@ -55,7 +52,8 @@ public class MakeMetalGoal extends Goal {
                 float make = (float) (unitDef.getExtractsResource(res) * map.getResourceMapSpotsAverageIncome(res) * Math.pow(map.getExtractorRadius(res), 2) * Math.PI / 10 +
                         unitDef.getResourceMake(res) +
                         unitDef.getMakesResource(res) -
-                        unitDef.getUpkeep(res));
+                        unitDef.getUpkeep(res) +
+                        Util.getMetalMake(unitDef));
 
                 return make;
             }

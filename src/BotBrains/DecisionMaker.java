@@ -1,9 +1,6 @@
 package BotBrains;
 
-import BotBrains.Actions.AttackAction;
-import BotBrains.Actions.BuildAction;
-import BotBrains.Actions.ExploreAction;
-import BotBrains.Actions.NothingAction;
+import BotBrains.Actions.*;
 import BotBrains.Goals.*;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -14,20 +11,25 @@ import com.springrts.ai.oo.clb.UnitDef;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by byronandanne on 11/26/2014.
  */
 public class DecisionMaker {
+    public static int id = 0;
     private static DecisionMaker maker = null;
     public DataMap ThreatMap;
     public DataMap VisitedMap;
+    public DataMap BuildingMap;
     List<Goal> goals = new ArrayList<Goal>();
     OOAICallback clb = null;
     UnitDef unit_first = null;
+    HashMap<String, Boolean> skipUnitType = new HashMap<>();
 
     private DecisionMaker() {
+        id = Util.RAND.nextInt(123456);
     }
 
     public static DecisionMaker get() {
@@ -56,17 +58,41 @@ public class DecisionMaker {
         //load up table with values
         SpringBot.write("ready to choose");
         for (Action action : actions) {
-            //skip is not for consideration
-            if (!action.consider_me) {
-                continue;
-            }
-
             for (Goal goal : goals) {
                 //SpringBot.write("processing goal: " + goal);
                 values.put(action, goal, goal.getGoalChange(action));
             }
 
         }
+
+        /*
+        //export the goals/action matrix
+        StringBuilder sb = new StringBuilder();
+        boolean first = true;
+        for (Action action : values.rowKeySet()) {
+
+            if (first) {
+                for (Goal goal : values.columnKeySet()) {
+                    sb.append(goal);
+                    sb.append("\t");
+                }
+                first = false;
+
+                sb.append("\r\n");
+            }
+
+            sb.append(action);
+
+            for (Goal goal : values.columnKeySet()) {
+                sb.append(values.get(action, goal));
+                sb.append("\t");
+            }
+            sb.append("\r\n");
+        }
+
+        SpringBot.write(sb.toString());
+        */
+
 
         //normal so that all goals have 1 max
         for (Goal g : goals) {
@@ -75,9 +101,9 @@ public class DecisionMaker {
             //update for each action
             if (max != 0) {
                 for (Action a : actions) {
-                    if (a.consider_me) {
-                        values.put(a, g, values.get(a, g) / max);
-                    }
+
+                    values.put(a, g, values.get(a, g) / max);
+
                 }
             }
         }
@@ -86,16 +112,15 @@ public class DecisionMaker {
         Action top_action = null;
         float max_utility = -Float.MAX_VALUE;
         for (Action a : actions) {
-            if (!a.consider_me) {
-                continue;
-            }
+
+
             //update for each action
             float utility = 0;
             for (Goal g : goals) {
                 utility += values.get(a, g) * g.getGoalValue();
             }
 
-            //SpringBot.write("action: " + a + ", util: " + utility);
+            SpringBot.write("action: " + a + ", util: " + utility);
 
             if (utility > max_utility) {
                 top_action = a;
@@ -117,9 +142,21 @@ public class DecisionMaker {
 
     public void ProcessUnit(Unit unit) {
 
+        if (unit == null) {
+            return;
+        }
+
         //init the first unit
         if (unit_first == null) {
             unit_first = unit.getDef();
+            VisitedMap.addToMap(unit.getPos(), 20);
+        }
+
+        //this will skip "dead" units for now
+        if (skipUnitType.containsKey(unit.getDef().getName())) {
+            if (skipUnitType.get(unit.getDef().getName())) {
+                return;
+            }
         }
 
         List<Action> actions = new ArrayList<Action>();
@@ -136,22 +173,33 @@ public class DecisionMaker {
             actions.add(attackAction);
         }
 
+
         ExploreAction exploreAction = ExploreAction.createAction(unit);
         if (exploreAction != null) {
             actions.add(exploreAction);
         }
 
+        RepairAction repairAction = RepairAction.createAction(unit);
+        if (repairAction != null) {
+            actions.add(repairAction);
+        }
 
+
+        //TODO consider adding this back in
         //create the do nothing action
+
         if (actions.size() > 0) {
             actions.add(new NothingAction());
         }
 
-        SpringBot.write("process unit actions: " + unit.getDef().getName() + ", count: " + actions.size());
+
+        //SpringBot.write("process unit actions: " + unit.getDef().getName() + ", count: " + actions.size());
 
         //size ==1 => only the do nothing option
         if (actions.size() > 0) {
             DecideAndExecute(actions);
+        } else {
+            skipUnitType.put(unit.getDef().getName(), true);
         }
 
     }
@@ -169,11 +217,14 @@ public class DecisionMaker {
         goals.add(new StoreSolarGoal());
         goals.add(new StoreMetalGoal());
         goals.add(new RandomBuildGoal());
-        goals.add(new MakeMilitary());
+        goals.add(new MakeMilitaryUnitsGoal());
         //goals.add(new ForceSingleUnit());
         goals.add(new DoNotBuildMore());
-        goals.add(new BuildFactories());
+        goals.add(new BuildFactoriesGoal());
         goals.add(new PursueMoreTechGoal());
+        goals.add(new ExpandEmpireGoal());
+        goals.add(new ConstructionGoal());
+        goals.add(new BuildDefenseGoal());
     }
 
     public void DecideAndExecute(List<Action> actions) {
@@ -201,8 +252,6 @@ public class DecisionMaker {
 
             buildSite = best_action.findLocationForAction();
 
-
-            //TODO verify that this code will work as expected
             if (buildSite != null) {
                 break;
             } else {

@@ -1,7 +1,6 @@
 package BotBrains.Actions;
 
 import BotBrains.Action;
-import BotBrains.DecisionMaker;
 import BotBrains.SpringBot;
 import BotBrains.Util;
 import com.springrts.ai.oo.AIFloat3;
@@ -10,30 +9,27 @@ import com.springrts.ai.oo.clb.Unit;
 /**
  * Created by byronandanne on 11/30/2014.
  */
-public class AttackAction extends Action {
+public class RepairAction extends Action {
 
-    private AttackAction() {
+    private RepairAction() {
     }
 
-    public static AttackAction createAction(Unit unit) {
+    public static RepairAction createAction(Unit unit) {
 
 
-        if (unit.getDef().getWeaponMounts().size() == 0 ||
-                !unit.getDef().isAbleToMove() ||
-                unit.getDef().isCommander() ||
-                unit.getDef().getName().equals("armcom") ||
-                unit.getDef().getName().equals("corcom")) {
+        //only applies to builders
+        if (!unit.getDef().isBuilder() || !unit.getDef().isAbleToRepair()) {
             return null;
         }
 
-        AttackAction action = new AttackAction();
+        RepairAction action = new RepairAction();
 
         action.def_builderUnit = unit;
         //TODO fix this reference
 
         //iterate through nearby areas and pick the "most" dangerous
 
-        action.loc_action = DecisionMaker.get().ThreatMap.getHighestValue();
+        action.loc_action = Util.getRandomNearbyPosition(unit.getPos(), 500);
 
 
         //action.loc_action = DecisionMaker.get().ThreatMap.getHighestValue();
@@ -46,9 +42,10 @@ public class AttackAction extends Action {
     @Override
     public void processAction() {
 //set to roam.... hopefully he attacks now.
-        this.def_builderUnit.setMoveState(Util.MOVE_STATE_ROAM, (short) 0, 0);
-        this.def_builderUnit.fight(this.loc_action, (short) 0, 0);
 
+        //TODO determine a better way to do this.  need to actually repair and get back to normal
+
+        //this.def_builderUnit.patrolTo(this.loc_action, (short) 0, 0);
 
     }
 
@@ -61,7 +58,7 @@ public class AttackAction extends Action {
     @Override
     public String toString() {
 
-        return String.format("ATTACK action, unit: %s, loc: %s", def_builderUnit.getDef().getName(), loc_action);
+        return String.format("REPAIR action, unit: %s, loc: %s", def_builderUnit.getDef().getName(), loc_action);
 
     }
 
