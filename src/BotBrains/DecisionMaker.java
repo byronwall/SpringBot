@@ -18,6 +18,7 @@ import java.util.List;
  * Created by byronandanne on 11/26/2014.
  */
 public class DecisionMaker {
+    public static final String TABLE = "action_log";
     public static int id = 0;
     private static DecisionMaker maker = null;
     public DataMap ThreatMap;
@@ -56,7 +57,8 @@ public class DecisionMaker {
         Table<Action, Goal, Float> values = HashBasedTable.create();
 
         //load up table with values
-        SpringBot.write("ready to choose");
+
+        //SpringBot.write("ready to choose");
         for (Action action : actions) {
             for (Goal goal : goals) {
                 //SpringBot.write("processing goal: " + goal);
@@ -120,7 +122,7 @@ public class DecisionMaker {
                 utility += values.get(a, g) * g.getGoalValue();
             }
 
-            SpringBot.write("action: " + a + ", util: " + utility);
+            DatabaseMaster.get().addFrameData(TABLE, "action: " + a + ", util: " + utility, SpringBot.FRAME);
 
             if (utility > max_utility) {
                 top_action = a;
@@ -131,11 +133,6 @@ public class DecisionMaker {
         }
 
         //now we have modified action scores... need to sum product with goal scores to pick
-
-
-        if (top_action == null) {
-            SpringBot.write("No actions are available.");
-        }
 
         return top_action;
     }
@@ -238,7 +235,7 @@ public class DecisionMaker {
 
         int counter = 0;
         while (true) {
-            SpringBot.write("counter: " + counter++);
+            counter++;
 
             best_action = chooseAction(actions);
 
@@ -246,7 +243,7 @@ public class DecisionMaker {
                 break;
             }
 
-            SpringBot.write("best action: " + best_action.toString());
+            DatabaseMaster.get().addFrameData(TABLE, "best action: " + best_action.toString() + ", counter: " + counter, SpringBot.FRAME);
 
             //need to pick build location and check if it can be done
 

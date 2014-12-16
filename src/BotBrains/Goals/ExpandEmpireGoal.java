@@ -1,7 +1,10 @@
 package BotBrains.Goals;
 
-import BotBrains.*;
+import BotBrains.Action;
 import BotBrains.Actions.ExploreAction;
+import BotBrains.DecisionMaker;
+import BotBrains.Goal;
+import BotBrains.Util;
 
 public class ExpandEmpireGoal extends Goal {
 
@@ -17,10 +20,13 @@ public class ExpandEmpireGoal extends Goal {
         float frac = DecisionMaker.get().VisitedMap.fractionAbove(0);
         float value = Util.clamp((target_ratio - frac) / target_ratio, 0, 1);
 
-        SpringBot.write("expand empire goal: " + value + ", w/ " + "frac :" + frac);
-
         return value;
 
+    }
+
+    @Override
+    protected String getName() {
+        return "ExpandEmpire";
     }
 
     @Override

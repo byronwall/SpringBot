@@ -101,8 +101,6 @@ public class BuildAction extends Action {
                     }
                 }
 
-                SpringBot.write("possibleSite: " + possibleSite);
-
                 if (!Util.PosIsNull(possibleSite)) {
                     buildSite = possibleSite;
                 }

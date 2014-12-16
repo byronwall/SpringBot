@@ -29,6 +29,11 @@ public class ForceSingleUnit extends Goal {
     }
 
     @Override
+    protected String getName() {
+        return "ForceSingle";
+    }
+
+    @Override
     public float getGoalChange(Action action) {
 
         if (action instanceof BuildAction) {

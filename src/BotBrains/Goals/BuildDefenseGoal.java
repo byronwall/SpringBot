@@ -1,7 +1,10 @@
 package BotBrains.Goals;
 
-import BotBrains.*;
+import BotBrains.Action;
 import BotBrains.Actions.BuildAction;
+import BotBrains.DecisionMaker;
+import BotBrains.Goal;
+import BotBrains.Util;
 import com.springrts.ai.oo.clb.Unit;
 import com.springrts.ai.oo.clb.UnitDef;
 
@@ -33,11 +36,13 @@ public class BuildDefenseGoal extends Goal {
 
         value = Util.clamp((target_ratio - 1.0f * units_defense / units_total) / target_ratio, 0, 1);
 
-
-        SpringBot.write("build defense ratio goal: " + value + ", w/ " + units_total + ", fac:" + units_defense);
-
         return value;
 
+    }
+
+    @Override
+    protected String getName() {
+        return "BuildDefense";
     }
 
     @Override

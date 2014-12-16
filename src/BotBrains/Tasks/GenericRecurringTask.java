@@ -1,4 +1,7 @@
-package BotBrains;
+package BotBrains.Tasks;
+
+import BotBrains.JustRunIt;
+import BotBrains.Task;
 
 public class GenericRecurringTask extends Task {
 

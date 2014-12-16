@@ -1,8 +1,11 @@
 package BotBrains.Goals;
 
-import BotBrains.*;
+import BotBrains.Action;
 import BotBrains.Actions.BuildAction;
 import BotBrains.Actions.RepairAction;
+import BotBrains.DecisionMaker;
+import BotBrains.Goal;
+import BotBrains.Util;
 import com.springrts.ai.oo.clb.Unit;
 import com.springrts.ai.oo.clb.UnitDef;
 
@@ -37,10 +40,13 @@ public class ConstructionGoal extends Goal {
             value = Util.clamp((target_ratio - 1.0f * units_build / units_total) / target_ratio, 0, 1);
         }
 
-        SpringBot.write("construction factory ratio goal: " + value + ", w/ " + units_total + ", fac:" + units_build);
-
         return value;
 
+    }
+
+    @Override
+    protected String getName() {
+        return "Construction";
     }
 
     @Override

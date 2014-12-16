@@ -4,7 +4,6 @@ import BotBrains.Action;
 import BotBrains.Actions.BuildAction;
 import BotBrains.DecisionMaker;
 import BotBrains.Goal;
-import BotBrains.SpringBot;
 import com.springrts.ai.oo.clb.OOAICallback;
 import com.springrts.ai.oo.clb.Resource;
 import com.springrts.ai.oo.clb.UnitDef;
@@ -28,10 +27,13 @@ public class StoreMetalGoal extends Goal {
 
         float value = Math.min(Math.max(average / storage, 0), 1);
 
-        SpringBot.write("store metal goal is: " + value);
-
         return value;
 
+    }
+
+    @Override
+    protected String getName() {
+        return "StoreMetal";
     }
 
     @Override

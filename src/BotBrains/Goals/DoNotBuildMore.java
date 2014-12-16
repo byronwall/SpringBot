@@ -1,7 +1,10 @@
 package BotBrains.Goals;
 
-import BotBrains.*;
+import BotBrains.Action;
 import BotBrains.Actions.BuildAction;
+import BotBrains.DecisionMaker;
+import BotBrains.Goal;
+import BotBrains.Util;
 import com.springrts.ai.oo.clb.OOAICallback;
 import com.springrts.ai.oo.clb.Resource;
 import com.springrts.ai.oo.clb.UnitDef;
@@ -30,10 +33,13 @@ public class DoNotBuildMore extends Goal {
             value *= 1 - Util.clamp(average / storage, 0, 1);
         }
 
-        SpringBot.write("don't build goal is: " + value);
-
         return value;
 
+    }
+
+    @Override
+    protected String getName() {
+        return "DoNotBuildMore";
     }
 
     @Override

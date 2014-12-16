@@ -5,8 +5,9 @@ import com.springrts.ai.oo.AIFloat3;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Base64;
 import java.util.HashMap;
 
 /**
@@ -48,8 +49,8 @@ public class DataMap {
         this.map_height = map_height;
 
         //TODO, test these values and un-hardcode if needed
-        data_width = 256;
-        data_height = 256;
+        data_width = 512;
+        data_height = 512;
 
 
         //determine number of boxes needed
@@ -58,8 +59,6 @@ public class DataMap {
 
         //we now have our box sizes, create data store
         data = new float[height_divisions][width_divisions];
-
-        SpringBot.write("created map: " + this.toString() + dataToString());
 
     }
 
@@ -108,16 +107,20 @@ public class DataMap {
 
         g.dispose();
 
+        //send it to the database
         try {
-            ImageIO.write(bi, "PNG", new File(path + id + System.currentTimeMillis() + ".png"));
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(bi, "PNG", baos);
+            baos.flush();
+            byte[] imageInByte = baos.toByteArray();
+            String base64 = Base64.getEncoder().encodeToString(imageInByte);
+            baos.close();
+
+
+            DatabaseMaster.get().addImageToDB(SpringBot.FRAME, name, base64);
         } catch (IOException e) {
-            e.printStackTrace();
+            SpringBot.write("ERROR with image to DB: " + e.getMessage());
         }
-
-
-        //draw the data as gray scale for each square
-
-        //make it 1/8 size of full map
 
     }
 
@@ -269,10 +272,6 @@ public class DataMap {
 
     public void blur() {
         //copy matrix
-
-        SpringBot.write("doing a blur...");
-        SpringBot.write("before: " + dataToString());
-
         float[][] temp = new float[height_divisions][width_divisions];
 
         //go through rows and update
@@ -284,6 +283,7 @@ public class DataMap {
             }
         }
 
+        //go through columns and update
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[i].length; j++) {
 
@@ -292,17 +292,12 @@ public class DataMap {
             }
         }
 
+        //copy matrix back over
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[i].length; j++) {
                 data[i][j] = temp[i][j];
             }
         }
-
-        SpringBot.write("after: " + dataToString());
-
-        //go through columns and update
-
-        //copy matrix back over
     }
 
     private float getValueOrDefault(int i, int j, float def) {

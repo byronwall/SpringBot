@@ -42,11 +42,7 @@ public class Util {
 
     public static boolean PosIsNull(AIFloat3 pos){
 
-        boolean val =  pos.dot(pos) == 1;
-
-        SpringBot.write("null test:" + pos + "," + val);
-
-        return val;
+        return pos.dot(pos) == 1;
     }
 
     public static AIFloat3 getRandomNearbyPosition(AIFloat3 pos, float distance) {

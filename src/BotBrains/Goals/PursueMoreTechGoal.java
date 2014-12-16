@@ -1,9 +1,12 @@
 package BotBrains.Goals;
 
-import BotBrains.*;
+import BotBrains.Action;
 import BotBrains.Actions.BuildAction;
+import BotBrains.DecisionMaker;
+import BotBrains.Goal;
 import BotBrains.Graph.Graph;
 import BotBrains.Graph.Node;
+import BotBrains.Util;
 import com.springrts.ai.oo.clb.OOAICallback;
 import com.springrts.ai.oo.clb.Unit;
 import com.springrts.ai.oo.clb.UnitDef;
@@ -63,9 +66,12 @@ public class PursueMoreTechGoal extends Goal {
         float avg_dist = 1.0f * total_distance / total_units;
         float value = Util.clamp((target_tech - avg_dist) / target_tech, 0, 1);
 
-        SpringBot.write("tech goal value is: " + value + " w/ " + avg_dist);
-
         return value;
+    }
+
+    @Override
+    protected String getName() {
+        return "PursueTech";
     }
 
     private void initDistances() {
@@ -79,14 +85,6 @@ public class PursueMoreTechGoal extends Goal {
         distances.put(unit_first.getName(), 0);
 
         traverseNext(root, 1);
-
-        //write out results to check
-        //SpringBot.write("distances from: " + unit_first.getName());
-        for (String s : distances.keySet()) {
-            SpringBot.write(s + " = " + distances.get(s));
-        }
-        //need to go from node, and record every other node that is hit
-
     }
 
     private void traverseNext(Node root, int depth) {

@@ -1,7 +1,10 @@
 package BotBrains.Goals;
 
-import BotBrains.*;
+import BotBrains.Action;
 import BotBrains.Actions.BuildAction;
+import BotBrains.DecisionMaker;
+import BotBrains.Goal;
+import BotBrains.Util;
 import com.springrts.ai.oo.clb.Unit;
 import com.springrts.ai.oo.clb.UnitDef;
 
@@ -31,10 +34,13 @@ public class MakeMilitaryUnitsGoal extends Goal {
             value = 1 - 2.0f * units_military / units_total;
         }
 
-        SpringBot.write("military ratio goal: " + value + ", w/ " + units_total);
-
         return value;
 
+    }
+
+    @Override
+    protected String getName() {
+        return "MakeMilitary";
     }
 
     @Override

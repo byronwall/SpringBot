@@ -1,7 +1,6 @@
 package BotBrains;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -38,20 +37,14 @@ public class TaskManager {
     }
 
     public void processTasks(int currentFrame) {
-        for (Iterator<Task> iterator = tasks.iterator(); iterator.hasNext(); ) {
-            Task task = iterator.next();
+        //using the reverse order iterator in order to delete from the list while processing
+        //don't try to use an iterator here... it will not work correctly
+        for (int i = tasks.size() - 1; i >= 0; i--) {
+            Task task = tasks.get(i);
             if (task.shouldRun(currentFrame)) {
 
-                try {
-
-                    boolean shouldDelete = task.run(currentFrame);
-
-                    // Remove the current element from the iterator and the list.
-                    if (shouldDelete) {
-                        iterator.remove();
-                    }
-                } catch (Throwable t) {
-                    SpringBot.write("ERROR task run: " + task + ", message: " + t);
+                if (task.run(currentFrame)) {
+                    tasks.remove(i);
                 }
             }
         }
@@ -59,23 +52,5 @@ public class TaskManager {
         lastFrameSeen = currentFrame;
     }
 
-}
-
-abstract class Task {
-    public boolean delete;
-    int frameToRunBy;
-
-    public Task(int frameToRunBy) {
-        this.frameToRunBy = frameToRunBy;
-    }
-
-    public Task() {
-    }
-
-    public boolean shouldRun(int frame) {
-        return frameToRunBy <= frame;
-    }
-
-    public abstract boolean run(int frame);
 }
 

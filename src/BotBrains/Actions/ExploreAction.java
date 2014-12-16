@@ -2,7 +2,6 @@ package BotBrains.Actions;
 
 import BotBrains.Action;
 import BotBrains.DecisionMaker;
-import BotBrains.SpringBot;
 import BotBrains.Util;
 import com.springrts.ai.oo.AIFloat3;
 import com.springrts.ai.oo.clb.OOAICallback;
@@ -55,8 +54,6 @@ public class ExploreAction extends Action {
         //clamp the values
         action.loc_action.x = Util.clamp(action.loc_action.x, 0, clb.getMap().getWidth() * 8);
         action.loc_action.z = Util.clamp(action.loc_action.z, 0, clb.getMap().getHeight() * 8);
-
-        SpringBot.write("EXPLORE action added:" + action);
 
         return action;
     }

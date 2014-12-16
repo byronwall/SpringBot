@@ -1,7 +1,6 @@
 package BotBrains.Actions;
 
 import BotBrains.Action;
-import BotBrains.SpringBot;
 import BotBrains.Util;
 import com.springrts.ai.oo.AIFloat3;
 import com.springrts.ai.oo.clb.Unit;
@@ -30,11 +29,6 @@ public class RepairAction extends Action {
         //iterate through nearby areas and pick the "most" dangerous
 
         action.loc_action = Util.getRandomNearbyPosition(unit.getPos(), 500);
-
-
-        //action.loc_action = DecisionMaker.get().ThreatMap.getHighestValue();
-
-        SpringBot.write("attack action added:" + action);
 
         return action;
     }

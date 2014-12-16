@@ -4,7 +4,6 @@ import BotBrains.Action;
 import BotBrains.Actions.BuildAction;
 import BotBrains.DecisionMaker;
 import BotBrains.Goal;
-import BotBrains.SpringBot;
 import com.springrts.ai.oo.clb.OOAICallback;
 import com.springrts.ai.oo.clb.Resource;
 import com.springrts.ai.oo.clb.UnitDef;
@@ -34,10 +33,13 @@ public class StoreSolarGoal extends Goal {
             return 0;
         }
 
-        SpringBot.write("store solar goal is: " + value);
-
         return value;
 
+    }
+
+    @Override
+    protected String getName() {
+        return "StoreSolar";
     }
 
     @Override

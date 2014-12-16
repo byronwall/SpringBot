@@ -1,89 +1,57 @@
 package BotBrains;
 
 
+import BotBrains.Tasks.GenericOneTimeTask;
+import BotBrains.Tasks.GenericRecurringTask;
 import com.springrts.ai.oo.AIFloat3;
 import com.springrts.ai.oo.clb.*;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.sql.SQLException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-import java.util.List;
 import java.util.Properties;
-import java.util.Random;
-import java.util.logging.*;
 
 public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
 
-    private static final int DEFAULT_ZONE = 0;
-    public static Logger log = null;
     public static int FRAME = 0;
     long millis;
-    private int skirmishAIId = -1;
     private int teamId = -1;
     private Properties info = null;
     private Properties optionValues = null;
     private OOAICallback clb = null;
-    private String myLogFile = null;
-    private Unit commander;
-    private Random rand = new Random();
-    private AIFloat3 loc_lastEnemy = null;
 
     public SpringBot() {
     }
 
     public static void write(String message) {
-
-        log.log(Level.FINE, message);
-
         //add a note to the DB also
-        DatabaseMaster.get().addDataToTable("LOG", message, FRAME);
-        
+        DatabaseMaster.get().addFrameData("log", message, FRAME);
+
     }
 
-    private static void logProperties(Logger log, Level level, Properties props) {
+    public static void logError(Exception e) {
+        StringWriter writer = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(writer);
+        e.printStackTrace(printWriter);
+        printWriter.flush();
 
-        log.log(level, "properties (items: " + props.size() + "):");
-        for (String key : props.stringPropertyNames()) {
-            log.log(level, key + " = " + props.getProperty(key));
-        }
-    }
-
-    private int sendTextMsg(String msg) {
-
-        try {
-            clb.getGame().sendTextMessage(msg, DEFAULT_ZONE);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return 1;
-        }
-
-        return 0;
-    }
-
-    public boolean isDebugging() {
-        return true;
+        DatabaseMaster.get().addFrameData("errors", writer.toString(), FRAME);
     }
 
     @Override
     public int init(int skirmishAIId, OOAICallback callback) {
 
-        int ret = -1;
-
         //set this up first and center
-
-
         millis = System.currentTimeMillis();
 
-        this.skirmishAIId = skirmishAIId;
         this.clb = callback;
-
         this.teamId = clb.getSkirmishAI().getTeamId();
 
         try {
-            DatabaseMaster.get().setup("database" + teamId);
+            DatabaseMaster.get().setup("database" + teamId + System.currentTimeMillis());
         } catch (SQLException e) {
-            log.log(Level.SEVERE, "SQL error" + e.getMessage());
+            //avoiding the DB here since this is DB related error
+            e.printStackTrace();
         }
 
         info = new Properties();
@@ -104,92 +72,51 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
             optionValues.setProperty(key, value);
         }
 
-        // initialize the log
-        try {
 
-            myLogFile = callback.getDataDirs().allocatePath((new Date()).toInstant().getEpochSecond() + " log-team-" + teamId + ".txt", true, true, false, false);
-            FileHandler fileLogger = new FileHandler(myLogFile, false);
-            fileLogger.setFormatter(new MyCustomLogFormatter());
-            fileLogger.setLevel(Level.ALL);
-            log = Logger.getLogger("springbot" + teamId);
-            log.addHandler(fileLogger);
-
-            if (isDebugging()) {
-                log.setLevel(Level.ALL);
-            } else {
-                log.setLevel(Level.INFO);
-            }
-        } catch (Exception ex) {
-            System.out.println("SpringBot: Failed initializing the logger!");
-            sendTextMsg("Failed initializng");
-            ex.printStackTrace();
-            ret = -2;
-        }
-
-        try {
-            log.info("initializing team " + teamId);
-
-            log.log(Level.FINE, "info:");
-            logProperties(log, Level.FINE, info);
-
-            log.log(Level.FINE, "options:");
-            logProperties(log, Level.FINE, optionValues);
-
-            ret = 0;
-        } catch (Exception ex) {
-            log.log(Level.SEVERE, "Failed initializing", ex);
-            ret = -3;
-        }
+        //TODO consider deleting this stuff or deciding what is really needed
+        DatabaseMaster.get().quickLog("initializing team " + teamId);
+        DatabaseMaster.get().quickLog("info:" + info.toString());
+        DatabaseMaster.get().quickLog("options:" + optionValues.toString());
 
         //write out some map info
-        log.log(Level.SEVERE, "map name: " + clb.getMap().getName());
-        log.log(Level.SEVERE, "map map_width: " + clb.getMap().getWidth());
-        log.log(Level.SEVERE, "map height: " + clb.getMap().getHeight());
+        DatabaseMaster.get().quickLog("map name: " + clb.getMap().getName());
+        DatabaseMaster.get().quickLog("map map_width: " + clb.getMap().getWidth());
+        DatabaseMaster.get().quickLog("map height: " + clb.getMap().getHeight());
 
         //dump out all the units
-        List<UnitDef> unitDefs = clb.getUnitDefs();
-        for (UnitDef def : unitDefs) {
-            StringBuilder sb = new StringBuilder();
+        //TODO move this out to another method and call when actually needed?
+        for (UnitDef def : clb.getUnitDefs()) {
 
-            sb.append(def.getName());
-            sb.append("\t");
-            sb.append(def.getHumanName());
-            sb.append("\t");
-            sb.append(def.isBuilder());
-            sb.append("\t, repair:");
-            sb.append(def.isAbleToRepair());
-            sb.append("\t");
-            sb.append(def.getSpeed());
-            sb.append("\t");
-            sb.append(def.getMaxWeaponRange());
+            String table = "units";
+            String unitName = def.getName();
+
+            DatabaseMaster.get().addRowColTable(table, unitName, "name", unitName);
+            DatabaseMaster.get().addRowColTable(table, unitName, "human name", def.getHumanName());
+            DatabaseMaster.get().addRowColTable(table, unitName, "isBuilder", def.isBuilder() + "");
+            DatabaseMaster.get().addRowColTable(table, unitName, "isAbleToReapir", def.isAbleToRepair() + "");
+            DatabaseMaster.get().addRowColTable(table, unitName, "speed", def.getSpeed() + "");
+            DatabaseMaster.get().addRowColTable(table, unitName, "weaponRange", def.getMaxWeaponRange() + "");
 
             for (Resource resource : clb.getResources()) {
-                sb.append("\t");
-                sb.append(resource.getName());
-                sb.append("\t");
-                sb.append(def.getExtractsResource(resource));
-                sb.append("\t");
-                sb.append(def.getMakesResource(resource));
-                sb.append("\t");
-                sb.append(def.getResourceMake(resource));
-                sb.append("\t");
-                sb.append(def.getStorage(resource));
-                sb.append("\t");
-                sb.append(def.getUpkeep(resource));
-                sb.append("\t");
-                sb.append(def.getCost(resource));
+                String res = resource.getName() + "-";
+
+                DatabaseMaster.get().addRowColTable(table, unitName, res + "getExtracts", def.getExtractsResource(resource) + "");
+                DatabaseMaster.get().addRowColTable(table, unitName, res + "getMakes", def.getMakesResource(resource) + "");
+                DatabaseMaster.get().addRowColTable(table, unitName, res + "getResourceMake", def.getResourceMake(resource) + "");
+                DatabaseMaster.get().addRowColTable(table, unitName, res + "getStorage", def.getStorage(resource) + "");
+                DatabaseMaster.get().addRowColTable(table, unitName, res + "getUpkeep", def.getUpkeep(resource) + "");
+                DatabaseMaster.get().addRowColTable(table, unitName, res + "getCost", def.getCost(resource) + "");
             }
 
+            String units = "";
             for (UnitDef unitDef : def.getBuildOptions()) {
-                sb.append("\t");
-                sb.append(unitDef.getName());
+                units += unitDef.getName() + " ";
             }
 
-
-            log.log(Level.SEVERE, sb.toString());
+            DatabaseMaster.get().addRowColTable(table, unitName, "buildOptions", units);
         }
 
-        ///TIME TO CREATE DecisionMaker
+        //TODO move this setup code to a spot that is not this init... too much code here
         try {
             DecisionMaker.get().setCallback(callback);
             DecisionMaker.get().InitializeGoals();
@@ -223,7 +150,6 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
             TaskManager.get().addTask(new GenericRecurringTask(
                     500, 10 * teamId,
                     (frame) -> {
-                        SpringBot.write("frame: " + frame);
                         int count = 0;
                         for (Unit unit : clb.getTeamUnits()) {
 
@@ -268,16 +194,17 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
             //set up the database
 
 
-        } catch (Throwable t) {
-            log.log(Level.SEVERE, "init " + t);
+        } catch (Exception e) {
+            SpringBot.logError(e);
         }
 
-        return ret;
+        return 0;
     }
 
     @Override
     public int release(int reason) {
 
+        //ensures that the pending entries are cleared
         DatabaseMaster.get().commitData();
 
         return 0; // signaling: OK
@@ -286,7 +213,7 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
     public void trackTime(int frame) {
         long elapsed = System.currentTimeMillis() - millis;
 
-        SpringBot.write("timer... elapsed: " + elapsed + ", ratio = " + 1.0f * frame / elapsed);
+        DatabaseMaster.get().addFrameData("FRAMES", String.valueOf(elapsed), FRAME);
     }
 
     @Override
@@ -296,8 +223,8 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
             //process all units every so often
             TaskManager.get().processTasks(frame);
 
-        } catch (Throwable t) {
-            log.log(Level.SEVERE, "update " + t + t.getMessage() + t.getStackTrace().toString());
+        } catch (Exception e) {
+            SpringBot.logError(e);
         }
 
         return 0; // signaling: OK
@@ -312,8 +239,6 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
     @Override
     public int unitCreated(Unit unit, Unit builder) {
 
-        //signalTextAndLog("Unit created: " + unit.getDef().getName());
-
         return 0;
     }
 
@@ -325,26 +250,12 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
             unit.setOn(true, (short) 0, 0);
             TaskManager.get().addTask(new GenericOneTimeTask(1, (c) -> DecisionMaker.get().ProcessUnit(unit)));
 
-        } catch (Throwable t) {
-            log.log(Level.SEVERE, "ERROR finished " + t);
+        } catch (Exception e) {
+            SpringBot.logError(e);
         }
 
 
         return 0;
-    }
-
-    public void signalTextAndLog(String message) {
-        signalTextAndLog(message, Level.FINE);
-    }
-
-    public void signalTextAndLog(String message, Level level) {
-
-        message = "TEAM " + clb.getSkirmishAI().getTeamId() + "\t" + message;
-
-        if (level == Level.SEVERE) {
-            sendTextMsg(message);
-        }
-        log.log(level, message);
     }
 
     @Override
@@ -354,8 +265,8 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
             //process all units every so often
             TaskManager.get().addTask(new GenericOneTimeTask(1, (c) -> DecisionMaker.get().ProcessUnit(unit)));
 
-        } catch (Throwable t) {
-            log.log(Level.SEVERE, "ERROR idle " + t);
+        } catch (Exception e) {
+            SpringBot.logError(e);
         }
 
         return 0; // signaling: OK
@@ -372,8 +283,8 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
             //TODO handle these events better
             //SpringBot.write("unit damaged: " + unit.getDef().getName() + "," + unit.getPos());
             DecisionMaker.get().ThreatMap.addToMap(unit.getPos(), 2);
-        } catch (Throwable t) {
-            log.log(Level.SEVERE, "unitDamaged " + t);
+        } catch (Exception e) {
+            SpringBot.logError(e);
         }
 
         return 0; // signaling: OK
@@ -386,8 +297,8 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
             //SpringBot.write("unit destroyed: " + unit.getDef().getName() + "," + unit.getPos());
             DecisionMaker.get().ThreatMap.addToMap(unit.getPos(), 5);
 
-        } catch (Throwable t) {
-            log.log(Level.SEVERE, "unitDestroyed " + t);
+        } catch (Exception e) {
+            SpringBot.logError(e);
         }
 
         return 0; // signaling: OK
@@ -405,6 +316,16 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
 
     @Override
     public int enemyEnterLOS(Unit enemy) {
+        try {
+            //TODO handle these events better
+            if (enemy != null) {
+                //SpringBot.write("enemy spotted: " + enemy.getDef().getName() + "," + enemy.getPos());
+                DecisionMaker.get().ThreatMap.addToMap(enemy.getPos(), 2);
+            }
+        } catch (Exception e) {
+            SpringBot.logError(e);
+        }
+
         return 0;
     }
 
@@ -421,8 +342,8 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
                 //SpringBot.write("enemy spotted: " + enemy.getDef().getName() + "," + enemy.getPos());
                 DecisionMaker.get().ThreatMap.addToMap(enemy.getPos(), 1);
             }
-        } catch (Throwable t) {
-            log.log(Level.SEVERE, "enemyEnterRadar " + t);
+        } catch (Exception e) {
+            SpringBot.logError(e);
         }
 
         return 0; // signaling: OK
@@ -481,34 +402,6 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
     @Override
     public int enemyFinished(Unit enemy) {
         return 0; // signaling: OK
-    }
-
-    private static class MyCustomLogFormatter extends Formatter {
-
-        private DateFormat dateFormat = new SimpleDateFormat("HH:mm:ss:SSS dd.MM.yyyy");
-
-        public String format(LogRecord record) {
-
-            // Create a StringBuffer to contain the formatted record
-            // start with the date.
-            StringBuffer sb = new StringBuffer();
-
-            // Get the date from the LogRecord and add it to the buffer
-            Date date = new Date(record.getMillis());
-            sb.append(dateFormat.format(date));
-            sb.append("\t");
-
-            // Get the level name and add it to the buffer
-            sb.append(record.getLevel().getName());
-            sb.append("\t");
-
-            // Get the formatted message (includes localization
-            // and substitution of paramters) and add it to the buffer
-            sb.append(formatMessage(record));
-            sb.append("\r\n");
-
-            return sb.toString();
-        }
     }
 
 }

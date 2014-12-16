@@ -36,7 +36,14 @@ public class DatabaseMaster {
         return _instance;
     }
 
-    public synchronized void addDataToTable(String table, String data, int frame) {
+    //TODO create a table-row-column adder that allows for generic 2 dimensional data storages
+    //this will create the table, row, or column as needed to get data into it
+    //used for storing multiple data points vs. frame
+    //used for storing matrices and unit info
+    //could also be done with a multi table approach
+    //multi table will be harder to inspect, but easier to deal with
+
+    public synchronized void addFrameData(String table, String data, int frame) {
         //need to log the timestamp and value
 
         if (!tables.contains(table)) {
@@ -58,6 +65,74 @@ public class DatabaseMaster {
         } catch (SQLException e) {
             SpringBot.write("SQL ERROR, add data to table: " + e.getMessage());
         }
+    }
+
+    public void quickLog(String message) {
+        addFrameData("log", message, SpringBot.FRAME);
+    }
+
+    //this code works... quite inefficient
+    public synchronized void addRowColTable(String table, String row, String column, String value) {
+
+        if (!tables.contains(table)) {
+            //create the table first
+            tables.add(table);
+            try {
+
+                Statement create = conn.createStatement();
+                create.executeUpdate("CREATE TABLE " + table + "(row text, column text, data text)");
+
+            } catch (SQLException e) {
+                SpringBot.write("SQL ERROR, create row_col_table table: " + e.getMessage());
+            }
+
+        }
+
+        //add image
+        try {
+            PreparedStatement insert = conn.prepareStatement("INSERT INTO " + table + "('row', 'column', 'data') VALUES (?,?,?)");
+            insert.setString(1, row);
+            insert.setString(2, column);
+            insert.setString(3, value);
+            insert.addBatch();
+            insert.executeBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public synchronized void addImageToDB(int frame, String map_id, String image) {
+        //check or create table
+
+        String table = "images";
+
+        if (!tables.contains(table)) {
+            //create the table first
+            tables.add(table);
+            try {
+
+                Statement create = conn.createStatement();
+                create.executeUpdate("CREATE TABLE " + table + "(frame integer, map_id text, data text)");
+
+            } catch (SQLException e) {
+                SpringBot.write("SQL ERROR, create image table: " + e.getMessage());
+            }
+
+        }
+
+        //add image
+        try {
+            PreparedStatement insert = conn.prepareStatement("INSERT INTO " + table + "('frame', 'map_id', 'data') VALUES (?,?,?)");
+            insert.setInt(1, frame);
+            insert.setString(2, map_id);
+            insert.setString(3, image);
+            insert.addBatch();
+            insert.executeBatch();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
     }
 
     public synchronized void commitData() {
@@ -97,6 +172,7 @@ public class DatabaseMaster {
 
         // set up the path for now;
         path = "C:/Users/byronandanne/Documents/My Games/Spring/AI/Skirmish/SpringBot/0.1/db/" + id + ".db";
+
 
         conn = getConnection();
         conn.setAutoCommit(false);

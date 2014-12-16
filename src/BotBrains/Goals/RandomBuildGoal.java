@@ -16,6 +16,11 @@ public class RandomBuildGoal extends Goal {
     }
 
     @Override
+    protected String getName() {
+        return "Random";
+    }
+
+    @Override
     public float getGoalChange(Action action) {
 
         return Util.RAND.nextFloat();
