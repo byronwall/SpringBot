@@ -2,6 +2,7 @@ package BotBrains.Actions;
 
 import BotBrains.Action;
 import BotBrains.DecisionMaker;
+import BotBrains.SpringBot;
 import BotBrains.Util;
 import com.springrts.ai.oo.AIFloat3;
 import com.springrts.ai.oo.clb.OOAICallback;
@@ -60,8 +61,8 @@ public class ExploreAction extends Action {
 
     @Override
     public void processAction() {
-        this.def_builderUnit.setMoveState(Util.MOVE_STATE_ROAM, (short) 0, 0);
-        this.def_builderUnit.fight(this.loc_action, (short) 0, 0);
+        this.def_builderUnit.setMoveState(Util.MOVE_STATE_ROAM, (short) 0, SpringBot.FRAME + 2000);
+        this.def_builderUnit.fight(this.loc_action, (short) 0, SpringBot.FRAME + 2000);
     }
 
     @Override

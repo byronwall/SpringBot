@@ -48,7 +48,7 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
         this.teamId = clb.getSkirmishAI().getTeamId();
 
         try {
-            DatabaseMaster.get().setup("database" + teamId + System.currentTimeMillis());
+            DatabaseMaster.get().setup("database " + teamId + " " + System.currentTimeMillis());
         } catch (SQLException e) {
             //avoiding the DB here since this is DB related error
             e.printStackTrace();
@@ -130,7 +130,7 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
                     2000, 0,
                     (frame) -> {
                         DecisionMaker.get().ThreatMap.toImage("threat" + clb.getSkirmishAI().getTeamId());
-                        //DecisionMaker.get().ThreatMap.decay();
+                        DecisionMaker.get().ThreatMap.decay();
                         DecisionMaker.get().ThreatMap.blur();
                     }
             ));
@@ -140,7 +140,7 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
                     (frame) -> {
                         //TODO move this to a proper spot
                         DecisionMaker.get().VisitedMap.toImage("visit" + clb.getSkirmishAI().getTeamId());
-                        //DecisionMaker.get().VisitedMap.decay();
+                        DecisionMaker.get().VisitedMap.decay();
                         DecisionMaker.get().VisitedMap.blur();
 
                     }
@@ -231,10 +231,6 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
 
     }
 
-    @Override
-    public int message(int player, String message) {
-        return 0; // signaling: OK
-    }
 
     @Override
     public int unitCreated(Unit unit, Unit builder) {
@@ -248,7 +244,16 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
         try {
             //process all units every so often
             unit.setOn(true, (short) 0, 0);
-            TaskManager.get().addTask(new GenericOneTimeTask(1, (c) -> DecisionMaker.get().ProcessUnit(unit)));
+
+            //TODO optmize this group deferal code.. not good to only have it here
+            //this will evaluate group addition for the current unit
+            //if in a group.. defer to that group's process scehem
+            Group group = GroupManager.get().evaluateUnitForGroups(unit);
+            if (group != null) {
+                group.processUnit(unit);
+            } else {
+                DecisionMaker.get().ProcessUnit(unit);
+            }
 
         } catch (Exception e) {
             SpringBot.logError(e);
@@ -272,10 +277,6 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
         return 0; // signaling: OK
     }
 
-    @Override
-    public int unitMoveFailed(Unit unit) {
-        return 0; // signaling: OK
-    }
 
     @Override
     public int unitDamaged(Unit unit, Unit attacker, float damage, AIFloat3 dir, WeaponDef weaponDef, boolean paralyzed) {
@@ -297,6 +298,8 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
             //SpringBot.write("unit destroyed: " + unit.getDef().getName() + "," + unit.getPos());
             DecisionMaker.get().ThreatMap.addToMap(unit.getPos(), 5);
 
+            Intelligence.unitKill(attacker, unit);
+
         } catch (Exception e) {
             SpringBot.logError(e);
         }
@@ -304,15 +307,6 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
         return 0; // signaling: OK
     }
 
-    @Override
-    public int unitGiven(Unit unit, int oldTeamId, int newTeamId) {
-        return 0; // signaling: OK
-    }
-
-    @Override
-    public int unitCaptured(Unit unit, int oldTeamId, int newTeamId) {
-        return 0; // signaling: OK
-    }
 
     @Override
     public int enemyEnterLOS(Unit enemy) {
@@ -329,10 +323,6 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
         return 0;
     }
 
-    @Override
-    public int enemyLeaveLOS(Unit enemy) {
-        return 0; // signaling: OK
-    }
 
     @Override
     public int enemyEnterRadar(Unit enemy) {
@@ -349,6 +339,42 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
         return 0; // signaling: OK
     }
 
+
+    @Override
+    public int enemyDestroyed(Unit enemy, Unit attacker) {
+        Intelligence.unitKill(attacker, enemy);
+
+        return 0; // signaling: OK
+    }
+
+    /*
+    THIS REMOVES OVERRIDES THAT ARE NOT BEING USED RIGHT NOW
+
+    @Override
+    public int message(int player, String message) {
+        return 0; // signaling: OK
+    }
+
+    @Override
+    public int unitMoveFailed(Unit unit) {
+        return 0; // signaling: OK
+    }
+
+    @Override
+    public int unitGiven(Unit unit, int oldTeamId, int newTeamId) {
+        return 0; // signaling: OK
+    }
+
+    @Override
+    public int unitCaptured(Unit unit, int oldTeamId, int newTeamId) {
+        return 0; // signaling: OK
+    }
+
+    @Override
+    public int enemyLeaveLOS(Unit enemy) {
+        return 0; // signaling: OK
+    }
+
     @Override
     public int enemyLeaveRadar(Unit enemy) {
         return 0; // signaling: OK
@@ -356,11 +382,6 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
 
     @Override
     public int enemyDamaged(Unit enemy, Unit attacker, float damage, AIFloat3 dir, WeaponDef weaponDef, boolean paralyzed) {
-        return 0; // signaling: OK
-    }
-
-    @Override
-    public int enemyDestroyed(Unit enemy, Unit attacker) {
         return 0; // signaling: OK
     }
 
@@ -403,5 +424,7 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
     public int enemyFinished(Unit enemy) {
         return 0; // signaling: OK
     }
+
+     */
 
 }

@@ -180,4 +180,7 @@ public class DatabaseMaster {
 
     }
 
+    public void addFrameData(String table, String data) {
+        addFrameData(table, data, SpringBot.FRAME);
+    }
 }

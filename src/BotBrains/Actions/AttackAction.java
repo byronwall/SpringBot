@@ -2,6 +2,7 @@ package BotBrains.Actions;
 
 import BotBrains.Action;
 import BotBrains.DecisionMaker;
+import BotBrains.SpringBot;
 import BotBrains.Util;
 import com.springrts.ai.oo.AIFloat3;
 import com.springrts.ai.oo.clb.Unit;
@@ -32,7 +33,14 @@ public class AttackAction extends Action {
 
         //iterate through nearby areas and pick the "most" dangerous
 
-        action.loc_action = DecisionMaker.get().ThreatMap.getHighestValue();
+        float alpha_decision = 0.25f;
+        if (Util.RAND.nextFloat() > alpha_decision) {
+
+            action.loc_action = DecisionMaker.get().ThreatMap.getHighestValue();
+        } else {
+            action.loc_action = DecisionMaker.get().VisitedMap.getLowestValue();
+            DecisionMaker.get().VisitedMap.addToMap(action.loc_action, 10);
+        }
 
         return action;
     }
@@ -40,8 +48,8 @@ public class AttackAction extends Action {
     @Override
     public void processAction() {
 //set to roam.... hopefully he attacks now.
-        this.def_builderUnit.setMoveState(Util.MOVE_STATE_ROAM, (short) 0, 0);
-        this.def_builderUnit.fight(this.loc_action, (short) 0, 0);
+        this.def_builderUnit.setMoveState(Util.MOVE_STATE_ROAM, (short) 0, SpringBot.FRAME + 2000);
+        this.def_builderUnit.fight(this.loc_action, (short) 0, SpringBot.FRAME + 2000);
 
 
     }

@@ -42,7 +42,7 @@ public class BuildAction extends Action {
     @Override
     public void processAction() {
         if (buildSite != null) {
-            this.def_builderUnit.build(this.def_buildeeUnit, buildSite, 0, (short) 0, 0);
+            this.def_builderUnit.build(this.def_buildeeUnit, buildSite, 0, (short) 0, SpringBot.FRAME + 2000);
         }
     }
 

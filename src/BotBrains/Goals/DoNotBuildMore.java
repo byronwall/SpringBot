@@ -33,7 +33,7 @@ public class DoNotBuildMore extends Goal {
             value *= 1 - Util.clamp(average / storage, 0, 1);
         }
 
-        return value;
+        return value * 1.6f;
 
     }
 

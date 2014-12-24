@@ -136,9 +136,16 @@ public class DataMap {
 
         average = average / (height_divisions * width_divisions);
 
+        float alpha = 0.4f;
+
         for (int i = 0; i < data.length; i++) {
             for (int j = 0; j < data[i].length; j++) {
-                data[i][j] -= average;
+
+                if (data[i][j] >= average) {
+                    data[i][j] -= average * (1 - alpha);
+                } else {
+                    data[i][j] -= average * alpha;
+                }
 
                 if (data[i][j] < 0) {
                     data[i][j] = 0;
@@ -151,6 +158,9 @@ public class DataMap {
 
     public float addToMap(float x, float z, float value) {
 
+        //need to clamp some values... maybe airplanes?
+        x = Util.clamp(x, 0, map_width);
+        z = Util.clamp(z, 0, map_height);
 
         //need to get the box to store in first
         int i = (int) (z / data_height);

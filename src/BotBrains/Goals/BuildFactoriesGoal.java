@@ -33,7 +33,7 @@ public class BuildFactoriesGoal extends Goal {
 
         //idea here is that the error will be at most target_ratio
         //divide by target ratio to get a number from 0 to 1;
-        if (units_total > 5) {
+        if (units_total > 8) {
             value = Util.clamp((target_ratio - 1.0f * units_factory / units_total) / target_ratio, 0, 1);
         }
 

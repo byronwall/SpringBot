@@ -8,11 +8,6 @@ import java.util.List;
  */
 public class TaskManager {
 
-    //TODO create a simple way to keep track of tasks
-    //TODO need a simple way to add single tasks
-    //TODO need a way to do recurring tasks
-    //TODO need an entry point to run the tasks
-
     private static TaskManager _instance = null;
     private List<Task> tasks = new ArrayList<>();
     private int lastFrameSeen = 0;

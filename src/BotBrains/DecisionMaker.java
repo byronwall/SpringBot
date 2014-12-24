@@ -1,6 +1,9 @@
 package BotBrains;
 
-import BotBrains.Actions.*;
+import BotBrains.Actions.AttackAction;
+import BotBrains.Actions.BuildAction;
+import BotBrains.Actions.NothingAction;
+import BotBrains.Actions.RepairAction;
 import BotBrains.Goals.*;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -67,35 +70,6 @@ public class DecisionMaker {
 
         }
 
-        /*
-        //export the goals/action matrix
-        StringBuilder sb = new StringBuilder();
-        boolean first = true;
-        for (Action action : values.rowKeySet()) {
-
-            if (first) {
-                for (Goal goal : values.columnKeySet()) {
-                    sb.append(goal);
-                    sb.append("\t");
-                }
-                first = false;
-
-                sb.append("\r\n");
-            }
-
-            sb.append(action);
-
-            for (Goal goal : values.columnKeySet()) {
-                sb.append(values.get(action, goal));
-                sb.append("\t");
-            }
-            sb.append("\r\n");
-        }
-
-        SpringBot.write(sb.toString());
-        */
-
-
         //normal so that all goals have 1 max
         for (Goal g : goals) {
             float max = Collections.max(values.column(g).values());
@@ -122,7 +96,8 @@ public class DecisionMaker {
                 utility += values.get(a, g) * g.getGoalValue();
             }
 
-            DatabaseMaster.get().addFrameData(TABLE, "action: " + a + ", util: " + utility, SpringBot.FRAME);
+            //TODO reenable this if needed
+            //DatabaseMaster.get().addFrameData(TABLE, "action: " + a + ", util: " + utility, SpringBot.FRAME);
 
             if (utility > max_utility) {
                 top_action = a;
@@ -150,8 +125,13 @@ public class DecisionMaker {
         }
 
         //this will skip "dead" units for now
-        if (skipUnitType.containsKey(unit.getDef().getName())) {
-            if (skipUnitType.get(unit.getDef().getName())) {
+        if (unit == null || unit.getDef() == null || unit.getDef().getName() == null) {
+            DatabaseMaster.get().quickLog("Null issue on ProcessUnit" + unit.getDef());
+            return;
+        }
+        String unitName = unit.getDef().getName();
+        if (skipUnitType.containsKey(unitName)) {
+            if (skipUnitType.get(unitName)) {
                 return;
             }
         }
@@ -170,33 +150,27 @@ public class DecisionMaker {
             actions.add(attackAction);
         }
 
-
+        /*
         ExploreAction exploreAction = ExploreAction.createAction(unit);
         if (exploreAction != null) {
             actions.add(exploreAction);
         }
+        */
 
         RepairAction repairAction = RepairAction.createAction(unit);
         if (repairAction != null) {
             actions.add(repairAction);
         }
 
-
-        //TODO consider adding this back in
-        //create the do nothing action
-
         if (actions.size() > 0) {
             actions.add(new NothingAction());
         }
-
-
-        //SpringBot.write("process unit actions: " + unit.getDef().getName() + ", count: " + actions.size());
 
         //size ==1 => only the do nothing option
         if (actions.size() > 0) {
             DecideAndExecute(actions);
         } else {
-            skipUnitType.put(unit.getDef().getName(), true);
+            skipUnitType.put(unitName, true);
         }
 
     }
