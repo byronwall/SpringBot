@@ -38,13 +38,19 @@ public class ConstructionGroup extends Group {
     }
 
     @Override
-    public void processUnit(Unit unit) {
+    public boolean processUnit(Unit unit) {
         //only want to get build tasks if it is the group leader
         if (leader != null && leader.getUnitId() == unit.getUnitId()) {
-            //TODO make this call explicit.. don't rely on parent
-            super.processUnit(unit);
+            DecisionMaker.get().ProcessUnit(unit);
 
             DatabaseMaster.get().addFrameData(GroupManager.TABLE, "told leader to be processed");
         }
+
+        return true;
+    }
+
+    @Override
+    public void doTimelyTask(int frame) {
+
     }
 }

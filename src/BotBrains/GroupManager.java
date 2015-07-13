@@ -1,5 +1,6 @@
 package BotBrains;
 
+import BotBrains.Groups.AttackGroup;
 import BotBrains.Groups.ConstructionGroup;
 import com.springrts.ai.oo.clb.Unit;
 
@@ -23,6 +24,7 @@ public class GroupManager {
     public GroupManager() {
         //load it up with some blank groups for now
         groups.add(new ConstructionGroup());
+        groups.add(new AttackGroup());
     }
 
     public static GroupManager get() {
@@ -31,6 +33,17 @@ public class GroupManager {
         }
 
         return _instance;
+    }
+
+    public boolean processUnit(Unit unit) {
+        if (assignments.containsKey(unit.getUnitId())) {
+            Group group = assignments.get(unit.getUnitId());
+            if (group != null) {
+                return group.processUnit(unit);
+            }
+        }
+
+        return false;
     }
 
     //TODO this may want a way to reprocess units later
@@ -74,6 +87,23 @@ public class GroupManager {
             return best_group;
         } else {
             return assignments.get(unit.getUnitId());
+        }
+
+    }
+
+    public void doTimelyTasks(int frame) {
+        DatabaseMaster.get().addFrameData(TABLE, "timely task for groups");
+        for (Group group : groups) {
+
+            //need to clean out dead things first
+            for (Integer integer : group.members.keySet()) {
+                if(group.members.get(integer) == null){
+                    group.members.remove(integer);
+                }
+            }
+
+
+            group.doTimelyTask(frame);
         }
 
     }

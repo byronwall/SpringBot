@@ -15,10 +15,10 @@ public abstract class Group {
     //TODO need to return group specific info for others to consume
     //TODO extending classes will fill in the specific logic
 
-    HashMap<Integer, Unit> members;
+    protected HashMap<Integer, Unit> members;
 
     //TODO do this better
-    Integer MAX_SIZE = 5;
+    protected int MAX_SIZE = 6;
 
     public Group() {
         members = new HashMap<>();
@@ -32,8 +32,8 @@ public abstract class Group {
         members.put(unit.getUnitId(), unit);
     }
 
-    public void processUnit(Unit unit) {
-        DecisionMaker.get().ProcessUnit(unit);
-    }
+    public boolean processUnit(Unit unit) { return false;    }
+
+    public abstract void doTimelyTask(int frame);
 }
 

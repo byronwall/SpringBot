@@ -32,12 +32,16 @@ public class Util {
     public static AIFloat3 EMPTY_POS = new AIFloat3(-1, -0, -0);
     public static Random RAND = new Random();
 
-    public static float calcDist(AIFloat3 a, AIFloat3 b) {
+    public static float calcDistSquared(AIFloat3 a, AIFloat3 b) {
         float xDistance = a.x - b.x;
         float yDistance = a.y - b.y;
         float zDistance = a.z - b.z;
         float totalDistanceSquared = xDistance * xDistance + yDistance * yDistance + zDistance * zDistance;
         return totalDistanceSquared;
+    }
+
+    public static float calcDist(AIFloat3 a, AIFloat3 b) {
+        return (float) Math.sqrt(calcDistSquared(a,b));
     }
 
     public static boolean PosIsNull(AIFloat3 pos){

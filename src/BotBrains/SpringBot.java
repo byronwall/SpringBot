@@ -125,6 +125,14 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
             DecisionMaker.get().ThreatMap = new DataMap("threat levels", clb.getMap().getWidth() * 8, clb.getMap().getHeight() * 8);
             DecisionMaker.get().VisitedMap = new DataMap("unit visit map", clb.getMap().getWidth() * 8, clb.getMap().getHeight() * 8);
 
+            //randomize the ThreatMap
+            for (int i = 0; i < 100; i++) {
+                float x = Util.RAND.nextFloat() * DecisionMaker.get().ThreatMap.map_width;
+                float z = Util.RAND.nextFloat() * DecisionMaker.get().ThreatMap.map_height;
+
+                DecisionMaker.get().ThreatMap.addToMap(x, z, Util.RAND.nextFloat() * 20);
+            }
+
             //create some recurring tasks for the maps
             TaskManager.get().addTask(new GenericRecurringTask(
                     2000, 0,
@@ -157,8 +165,11 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
                                 if (unit.getCurrentCommands().size() == 0 || unit.getCurrentCommands().get(0).getId() == 0) {
                                     //SpringBot.write("idle unit in action now...: " + unit.getDef().getName() + unit.getUnitId());
 
-
-                                    TaskManager.get().addTask(new GenericOneTimeTask(frame + count++, (c) -> DecisionMaker.get().ProcessUnit(unit)));
+                                    TaskManager.get().addTask(new GenericOneTimeTask(frame + count++, (c) -> {
+                                        if (!GroupManager.get().processUnit(unit)) {
+                                            DecisionMaker.get().ProcessUnit(unit);
+                                        }
+                                    }));
                                     //DecisionMaker.get().ProcessUnit(unit);
                                 }
                             }
@@ -188,6 +199,13 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
                     1000, 23,
                     (frame) -> {
                         DatabaseMaster.get().commitData();
+                    }
+            ));
+
+            TaskManager.get().addTask(new GenericRecurringTask(
+                    1000, 26,
+                    (frame) -> {
+                        GroupManager.get().doTimelyTasks(frame);
                     }
             ));
 
@@ -268,7 +286,11 @@ public class SpringBot extends com.springrts.ai.oo.AbstractOOAI {
 
         try {
             //process all units every so often
-            TaskManager.get().addTask(new GenericOneTimeTask(1, (c) -> DecisionMaker.get().ProcessUnit(unit)));
+            TaskManager.get().addTask(new GenericOneTimeTask(1, (c) -> {
+                if (!GroupManager.get().processUnit(unit)) {
+                    DecisionMaker.get().ProcessUnit(unit);
+                }
+            }));
 
         } catch (Exception e) {
             SpringBot.logError(e);

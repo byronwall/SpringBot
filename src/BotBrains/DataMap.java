@@ -29,8 +29,8 @@ public class DataMap {
     int width_divisions;
     int height_divisions;
 
-    float map_width;
-    float map_height;
+    public float map_width;
+    public float map_height;
 
     float data_width;
     float data_height;
@@ -63,9 +63,6 @@ public class DataMap {
     }
 
     public void toImage(String id) {
-
-        //create a hard coded file
-        String path = "C:\\Users\\byronandanne\\Documents\\My Games\\Spring\\AI\\Skirmish\\SpringBot\\0.1\\images\\";
 
         BufferedImage bi = new BufferedImage((int) map_width / 8, (int) map_height / 8, BufferedImage.TYPE_INT_ARGB);
         Graphics2D g = bi.createGraphics();
@@ -231,6 +228,21 @@ public class DataMap {
 
         return grid_values;
 
+
+    }
+
+    public AIFloat3 getHighestNearby(AIFloat3 pos){
+        HashMap<AIFloat3, Float> hashMap = nearbyValues(pos, false);
+
+        float max = 0;
+        AIFloat3 finalpos = null;
+        for (AIFloat3 float3 : hashMap.keySet()) {
+            if(hashMap.get(float3) > max){
+                finalpos = float3;
+            }
+        }
+
+        return finalpos;
 
     }
 

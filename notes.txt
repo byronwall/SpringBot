@@ -1,0 +1,264 @@
+*****
+* THESE ARE ALL FOR UNITS
+*****
+
+string name Default: "" lua: humanName
+This is simply the name of the unit as it appears to the player.
+
+string description Default: name lua: tooltip
+This is the tooltip description of the unit seen by the player. It defaults to the name of the unit.
+
+float maxDamage Default: 0.0 lua: health
+The base 'hitpoints' the unit will have.
+
+float buildCostMetal Default: 1.0 lua: metalCost
+The amount of metal resource the unit costs to build. Cannot be below 1.0.
+
+float buildCostEnergy Default: 0.0 lua: energyCost
+The amount of energy resource the unit costs to build.
+
+float buildTime Default: 0.0
+The time taken to build the unit, in conjunction with the workerTime of the constructor. In Resource Frames, Time to build = (buildTime / workerTime). Defaults to 0.0 but cannot actually be below 1.0.
+
+float metalStorage Default: 0.0
+The amount of the metal resource storage the unit contributes.
+float energyStorage Default: 0.0
+The amount of the energy resource storage the unit contributes.
+float extractsMetal Default: 0.0
+The amount of the metal resource the unit extracts from the ground. The amount extracted depends on the metal map defined in the map itself. Works only for structures.
+float metalUse Default: 0.0 lua: metalUpkeep
+The amount of the metal resource the unit consumes per game 'tick' when activated.
+float energyUse Default: 0.0 lua: energyUpkeep
+The amount of the energy resource the unit consumes per game 'tick' when activated.
+float metalMake Default: 0.0
+The amount of the metal resource the unit generates unconditionally per game 'tick'.
+float energyMake Default: 0.0
+The amount of the energy resource the unit generates unconditionally per game 'tick'.
+float makesMetal Default: 0.0
+The amount of the energy resource the unit turns into the metal resource per game 'tick'.
+
+
+float sightDistance Default: 0.0 lua: losRadius
+The radius of the units sight (LOS is circular in Spring)
+int radarDistance Default: 0 lua: radarRadius
+The radius of the units radar.
+
+
+bool canMove Default: false
+Can the unit be issued Move orders?
+bool canAttack Default: true
+Can the unit be issued Attack orders?
+
+bool builder Default: false lua: isBuilder
+Is the unit a builder?
+float workerTime Default: 0.0 lua: buildSpeed
+How fast the builder builds, used in conjunction with the buildTime of the unit being built. Effectively, Time to build = buildTime / workerTime. If this value is <= 0.0 then builder is set to false.
+
+
+float maxVelocity Default: 0.0 lua: ud.speed
+The maximum speed attainable by the unit in elmos per frame. If the value is -ve, the absolute value is used.
+
+
+bool canFly Default: false
+Can the unit fly, i.e. is it an aircraft?
+float maxFuel Default: 0.0
+The maximum flight time in seconds before aircraft must return to an airbase to refuel.
+
+string category Default: ""
+The category tag is a string of separate words, each representing a category of units. There is a maximum of 32 categories. The primary purpose of categories is weapon targeting (See #weapons).
+
+
+*****
+* THESE ARE ALL FOR WEAPONS
+*****
+
+bool waterWeapon Default: false
+Determines if the weapon can pass through water and target underwater units.
+
+string weaponType Default: "Cannon"
+
+float range Default: 10.0
+The maximum range in elmos that the weapon can fire at.
+int interceptedByShieldType Default: 0 (See description)
+Bitmask representing the types of shields that can intercept this weapon. Each digit of binary that is set to one means that a shield with the corresponding digit in its interceptType will intercept this weapon. The defaults are as follows:
+float targetMoveError Default: 0.0
+The degree to which a weapon's aiming will fail to keep up with its target's movement. If set very low or not set at all, a weapon will lead its target and almost always hit.
+float accuracy Default: 0.0
+How accurate the weapon is. Lower values are more accurate. Accuracy is relative to the distance to the target; for instance, if the target is very close, even a very high value will probably still hit. If a target is very far away, even a very low value will likely cause the weapon to miss.
+float areaOfEffect Default: 8.0 * 0.5 lua: damageAreaOfEffect
+The diameter in elmos in which the weapons explosion will cause damage.
+float edgeEffectiveness Default: 0.0
+Determines what percent of a weapon's maximum damage value will be applied to units within the weapon's areaOfEffect.
+
+
+damage
+The damage subtable lists how many hit points the weapon depletes against each armor class
+
+
+
+*******
+from
+https://code.google.com/p/crans-java-ai/source/browse/CransJavaAI/trunk/src/com/springrts/ai/crans/unittable/UnitTable.java?r=42
+private void debugPrint() {
+        final String[] listCategoryNames = { "GROUND-FACTORY", "GROUND-BUILDER", "GROUND-ATTACKER", "METAL-EXTRACTOR",
+                "METAL-MAKER", "METAL-STORAGE", "ENERGY-STORAGE", "GROUND-ENERGY", "GROUND-DEFENSE", "NUKE-SILO",
+                "SHIELD-GENERATOR", "LAST-CATEGORY" };
+
+        final StringBuffer msg = new StringBuffer();
+
+        for (final UnitDef udef : this.unitDefs) {
+            final UnitType uType = this.unitTypes.get(udef);
+
+            msg.append("UnitDef ID: ");
+            msg.append(udef.getUnitDefId());
+            msg.append("\n");
+            msg.append("\tName: ");
+            msg.append(udef.getName());
+            msg.append(" (\"");
+            msg.append(udef.getHumanName());
+            msg.append("\")\n");
+            msg.append("\tCan Build:\n");
+            for (final UnitDef unitDef : uType.canBuildList) {
+                final UnitType buildOption = this.unitTypes.get(unitDef);
+                final String buildOptName = buildOption.unitDef.getHumanName();
+
+                msg.append("\t\t\"");
+                msg.append(buildOptName);
+                msg.append("\"\n");
+            }
+
+            /*
+             * msg << "\tBuilt By:\n";
+             *
+             * for (unsigned int k = 0; k != utype->builtByList.size(); k++) { UnitType parent =
+             * &unitTypes[utype->builtByList[k]];
+             *
+             * for (std::set<int>::iterator it = parent->sides.begin(); it != parent->sides.end(); it++) { const char
+             * sideName = sideNames[it].c_str(); const char parentName = parent->def->humanName.c_str();
+             *
+             * msg << "\t\t(\"" << sideName << "\") \"" << parentName << "\"\n"; } }
+             */
+
+            msg.append("\n\n");
+        }
+
+        for (final Defines.UnitDefCategory defCat : Defines.UnitDefCategory.values()) {
+
+            msg.append("units grouped under category \"");
+            msg.append(listCategoryNames[defCat.ordinal()]);
+            msg.append("\":\n");
+
+            final Set<UnitDef> defs = this.categoryData.getDefsForUnitDefCat(defCat);
+
+            for (final UnitDef udef : defs) {
+                msg.append("\t");
+                msg.append(udef.getName());
+                msg.append(" (\"");
+                msg.append(udef.getHumanName());
+                msg.append("\")\n");
+            }
+
+            msg.append("\n");
+        }
+
+        msg.append("\n\n");
+
+        final File debugFile = new File(this.getDbgLogName());
+        try {
+            final Writer debugWriter = new BufferedWriter(new FileWriter(debugFile));
+            debugWriter.write(msg.toString());
+            debugWriter.close();
+        } catch (final IOException ex) {
+            this.LOG.log(Level.ERROR, "Failed creating debug file.", ex);
+        }
+
+        for (final UnitDef unitDef : this.unitDefs) {
+            final UnitType unitType = this.unitTypes.get(unitDef);
+            LOG.info("===========================================================================");
+            LOG.info("Unit name:             " + unitDef.getName() + " (" + unitDef.getHumanName() + ").");
+            LOG.info("Category:              " + unitType.category + ".");
+            LOG.info("Techlevel, Hub:        " + unitType.techLevel + ", " + unitType.isHub + ".");
+            LOG.info("Cost multiplier:       " + unitType.costMultiplier + ".");
+            LOG.info("Build options:         " + unitDef.getBuildOptions().size());
+            LOG.info("Speed:                 " + unitDef.getSpeed());
+            LOG.info("Air:                   " + unitDef.isAbleToFly());
+            LOG.info("Min water depth:       " + unitDef.getMinWaterDepth());
+            LOG.info("Builder:               " + unitDef.isBuilder());
+            LOG.info("Ted class string:      " + unitDef.getTedClassString());
+
+            final Resource metal = this.ai.rh.getMetal();
+            final Resource energy = this.ai.rh.getEnergy();
+
+            LOG.info("Extracts metal:        " + unitDef.getExtractsResource(metal));
+            LOG.info("Extracts energy:       " + unitDef.getExtractsResource(energy));
+            LOG.info("Makes metal:           " + unitDef.getMakesResource(metal));
+            LOG.info("Makes energy:          " + unitDef.getMakesResource(energy));
+            LOG.info("Make metal:            " + unitDef.getResourceMake(metal));
+            LOG.info("Make energy:           " + unitDef.getResourceMake(energy));
+            LOG.info("Maker metal:           " + unitDef.isResourceMaker(metal));
+            LOG.info("Maker energy:          " + unitDef.isResourceMaker(energy));
+            LOG.info("Upkeep metal:          " + unitDef.getUpkeep(metal));
+            LOG.info("Upkeep energy:         " + unitDef.getUpkeep(energy));
+            LOG.info("Cost metal:            " + unitDef.getCost(metal));
+            LOG.info("Cost energy:           " + unitDef.getCost(energy));
+            LOG.info("Tidal metal:           " + unitDef.getTidalResourceGenerator(metal));
+            LOG.info("Tidal energy:          " + unitDef.getTidalResourceGenerator(energy));
+            LOG.info("Wind metal:            " + unitDef.getWindResourceGenerator(metal));
+            LOG.info("Wind energy:           " + unitDef.getWindResourceGenerator(energy));
+            LOG.info("Storage metal:         " + unitDef.getStorage(metal));
+            LOG.info("Storage energy:        " + unitDef.getStorage(energy));
+            LOG.info("Needs geo:             " + unitDef.isNeedGeo());
+
+            LOG.info("Weapon mounts:         " + unitDef.getWeaponMounts().size());
+            final WeaponDef weapon = unitDef.getWeaponMounts().size() == 0 ? null : unitDef.getWeaponMounts().get(0)
+                    .getWeaponDef();
+            if (weapon != null) {
+                LOG.info("Water weapon:          " + weapon.isWaterWeapon());
+                LOG.info("Stockpiler:            " + weapon.isStockpileable());
+            }
+            final WeaponDef stockpile = unitDef.getStockpileDef();
+            if (stockpile != null) {
+                LOG.info("Stockpile tagetable:   " + stockpile.getTargetable());
+                LOG.info("Stockpile interceptor: " + stockpile.getInterceptor());
+            }
+
+            LOG.info("Shield:                " + (unitDef.getShieldDef() != null && unitDef.getShieldDef().isShield()));
+        }
+
+
+        final StringBuffer myBuffer = new StringBuffer();
+        myBuffer.append(", , ");
+        for (final UnitDef unitDef : this.unitDefs) {
+            myBuffer.append(unitDef.getName());
+            myBuffer.append(", ");
+        }
+        myBuffer.append("\r\n");
+        myBuffer.append(", , ");
+        for (final UnitDef unitDef : this.unitDefs) {
+            myBuffer.append(unitDef.getHumanName());
+            myBuffer.append(", ");
+        }
+        myBuffer.append("\r\n");
+        for (final UnitDef unitDef : this.unitDefs) {
+            final UnitType unitType = this.unitTypes.get(unitDef);
+            myBuffer.append(unitDef.getName());
+            myBuffer.append(", ");
+            myBuffer.append(unitDef.getHumanName());
+            myBuffer.append(", ");
+
+            for (final UnitDef target : unitType.dpsVsUnit.keys(new UnitDef[0])) {
+                myBuffer.append(unitType.dpsVsUnit.get(target));
+                myBuffer.append(", ");
+            }
+            myBuffer.append("\r\n");
+        }
+        final File myFile = new File(ai.dh.getLogFolder(), "dps.csv");
+        try {
+            final Writer debugWriter = new BufferedWriter(new FileWriter(myFile));
+            debugWriter.write(myBuffer.toString());
+            debugWriter.close();
+        } catch (final IOException ex) {
+            this.LOG.log(Level.ERROR, "Failed creating dps.csv file.", ex);
+        }
+
+    }

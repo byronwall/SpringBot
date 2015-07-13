@@ -60,7 +60,7 @@ public class BuildAction extends Action {
                 for (AIFloat3 resource_spot : clb.getMap().getResourceMapSpotsPositions(res)) {
 
                     //check distance and then verify that we can build there
-                    float dist = Util.calcDist(this.def_builderUnit.getPos(), resource_spot);
+                    float dist = Util.calcDistSquared(this.def_builderUnit.getPos(), resource_spot);
                     if (dist < min_dist) {
                         //check if can build
                         if (clb.getMap().isPossibleToBuildAt(this.def_buildeeUnit, resource_spot, 0)) {
@@ -76,7 +76,7 @@ public class BuildAction extends Action {
         }
 
         if (buildSite != null) {
-            if (Math.sqrt(Util.calcDist(buildSite, def_builderUnit.getPos())) > 3000) {
+            if (Math.sqrt(Util.calcDistSquared(buildSite, def_builderUnit.getPos())) > 3000) {
                 buildSite = null;
             }
         }
@@ -114,7 +114,7 @@ public class BuildAction extends Action {
             if (def_builderUnit.getDef().getName().equals("armcom") || def_builderUnit.getDef().getName().equals("corcom")) {
                 AIFloat3 highestValue = DecisionMaker.get().VisitedMap.getHighestValue();
 
-                if (Math.sqrt(Util.calcDist(buildSite, highestValue)) > 2500) {
+                if (Math.sqrt(Util.calcDistSquared(buildSite, highestValue)) > 2500) {
                     buildSite = null;
                     SpringBot.write("Commander not allow to build there: " + buildSite + ", high" + highestValue);
                 }
